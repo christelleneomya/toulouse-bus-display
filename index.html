@@ -1,0 +1,888 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>Affichage bus en temps réel – Senioriales Toulouse Canal du Midi</title>
+  <script src="./config.js"></script>
+
+  <style>
+    :root{
+      --bg:#eef2f6;
+      --card:#ffffff;
+      --card-soft:#f7f9fc;
+      --ink:#132238;
+      --muted:#5f6f84;
+      --stroke:#d9e2ec;
+      --stroke-soft:#e7edf4;
+      --shadow:0 10px 22px rgba(15,23,42,.05);
+
+      --blue:#356ae6;
+      --green:#1f8a5b;
+      --orange:#f08a24;
+
+      --highlight-bg:#edf4ff;
+      --highlight-border:#79a5ff;
+      --ok:#13884f;
+      --warn:#c27a0a;
+      --danger:#b91c1c;
+
+      --page-pad:18px;
+      --gap:18px;
+      --header-h:128px;
+      --footer-h:64px;
+
+      --radius-shell:32px;
+      --radius-card:30px;
+      --radius-panel:24px;
+      --radius-item:20px;
+      --radius-pill:999px;
+    }
+
+    *{ box-sizing:border-box; }
+
+    html, body{
+      width:100%;
+      height:100%;
+      margin:0;
+      overflow:hidden;
+      font-family:Arial, system-ui, sans-serif;
+      color:var(--ink);
+      background:var(--bg);
+    }
+
+    body{
+      min-width:1920px;
+      min-height:1080px;
+    }
+
+    .app{
+      width:100vw;
+      height:100vh;
+      padding:var(--page-pad);
+      display:grid;
+      grid-template-rows:var(--header-h) 1fr var(--footer-h);
+      gap:var(--gap);
+    }
+
+    header{
+      background:var(--card);
+      border:1px solid var(--stroke);
+      border-radius:var(--radius-shell);
+      box-shadow:var(--shadow);
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:20px;
+      padding:16px 28px;
+      min-height:0;
+    }
+
+    .titlewrap{
+      display:flex;
+      align-items:center;
+      gap:18px;
+      min-width:0;
+    }
+
+    .icon{
+      width:84px;
+      min-width:84px;
+      height:84px;
+      border-radius:24px;
+      display:grid;
+      place-items:center;
+      font-size:42px;
+      background:linear-gradient(135deg, var(--blue), #5a8cff);
+      color:#fff;
+      flex:0 0 auto;
+    }
+
+    .titlebox{
+      min-width:0;
+    }
+
+    h1{
+      margin:0;
+      font-size:44px;
+      line-height:1.02;
+      font-weight:800;
+      letter-spacing:-0.03em;
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+    }
+
+    .sub{
+      margin-top:10px;
+      font-size:22px;
+      line-height:1.15;
+      color:var(--muted);
+      font-weight:700;
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+    }
+
+    .meta{
+      text-align:right;
+      min-width:260px;
+      flex:0 0 auto;
+    }
+
+    .clock{
+      font-size:84px;
+      line-height:.95;
+      font-weight:800;
+      letter-spacing:-0.05em;
+      margin:0;
+    }
+
+    .updated{
+      margin-top:10px;
+      font-size:19px;
+      color:var(--muted);
+      font-weight:700;
+      white-space:nowrap;
+    }
+
+    main{
+      min-height:0;
+      overflow:hidden;
+    }
+
+    .screen{
+      height:100%;
+      min-height:0;
+    }
+
+    .screen.two-lines{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:var(--gap);
+    }
+
+    .screen.one-line{
+      display:grid;
+      grid-template-columns:1fr;
+    }
+
+    .line-card{
+      background:var(--card);
+      border:1px solid var(--stroke);
+      border-radius:var(--radius-card);
+      box-shadow:var(--shadow);
+      display:grid;
+      grid-template-rows:auto 1fr;
+      overflow:hidden;
+      min-height:0;
+    }
+
+    .line-card-header{
+      border-top:8px solid var(--line-color, var(--blue));
+      background:linear-gradient(to bottom, #ffffff 0%, #f9fbfd 100%);
+      padding:18px 20px 14px;
+    }
+
+    .line-top{
+      display:flex;
+      align-items:center;
+      gap:14px;
+      min-width:0;
+    }
+
+    .line-badge{
+      min-width:92px;
+      height:72px;
+      border-radius:22px;
+      display:grid;
+      place-items:center;
+      font-size:46px;
+      font-weight:800;
+      letter-spacing:-0.04em;
+      color:#fff;
+      background:var(--line-color, var(--blue));
+      padding:0 16px;
+      flex:0 0 auto;
+    }
+
+    .line-meta{
+      min-width:0;
+    }
+
+    .line-title{
+      margin:0;
+      font-size:24px;
+      line-height:1.1;
+      color:var(--muted);
+      font-weight:700;
+    }
+
+    .line-stop{
+      margin:4px 0 0;
+      font-size:40px;
+      line-height:1.04;
+      font-weight:800;
+      letter-spacing:-0.03em;
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+    }
+
+    .line-body{
+      padding:14px 16px 16px;
+      min-height:0;
+    }
+
+    .two-lines .line-body{
+      display:grid;
+      grid-template-columns:1fr;
+      gap:14px;
+      align-content:start;
+    }
+
+    .one-line .line-body{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:16px;
+      align-content:stretch;
+    }
+
+    .dir-panel{
+      background:var(--card-soft);
+      border:1px solid var(--stroke-soft);
+      border-radius:var(--radius-panel);
+      padding:16px;
+      display:grid;
+      grid-template-rows:auto 1fr;
+      min-height:0;
+    }
+
+    .dir-title{
+      margin:0 0 12px;
+      font-size:26px;
+      line-height:1.12;
+      font-weight:800;
+      color:var(--ink);
+    }
+
+    .one-line .dir-title{
+      font-size:28px;
+      margin-bottom:14px;
+    }
+
+    .dep-list{
+      display:grid;
+      gap:12px;
+      align-content:start;
+    }
+
+    .dep{
+      background:#fff;
+      border:1px solid var(--stroke-soft);
+      border-radius:var(--radius-item);
+      padding:14px 18px;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:18px;
+      min-height:0;
+    }
+
+    .dep.next{
+      background:var(--highlight-bg);
+      border:2px solid var(--highlight-border);
+      box-shadow:0 10px 20px rgba(53,106,230,.08);
+    }
+
+    .dep-left{
+      display:flex;
+      align-items:baseline;
+      gap:16px;
+      min-width:0;
+      flex:1 1 auto;
+    }
+
+    .dep-time{
+      font-size:56px;
+      line-height:1;
+      font-weight:800;
+      letter-spacing:-0.05em;
+      white-space:nowrap;
+      flex:0 0 auto;
+    }
+
+    .dep-right{
+      display:flex;
+      align-items:center;
+      gap:12px;
+      flex:0 0 auto;
+      white-space:nowrap;
+    }
+
+    .dep-mins{
+      font-size:30px;
+      line-height:1;
+      font-weight:900;
+      color:var(--muted);
+      white-space:nowrap;
+    }
+
+    .dep.next .dep-mins{
+      font-size:38px;
+      color:#425166;
+    }
+
+    .two-lines .dep-time{
+      font-size:58px;
+    }
+
+    .two-lines .dep-mins{
+      font-size:32px;
+    }
+
+    .two-lines .dep.next .dep-mins{
+      font-size:40px;
+    }
+
+    .one-line .dep-time{
+      font-size:64px;
+    }
+
+    .one-line .dep-mins{
+      font-size:36px;
+    }
+
+    .one-line .dep.next .dep-mins{
+      font-size:44px;
+    }
+
+    .next-badge{
+      font-size:14px;
+      line-height:1;
+      font-weight:800;
+      color:#355fd0;
+      border:1px solid #9ab8ff;
+      border-radius:var(--radius-pill);
+      padding:7px 10px 6px;
+      background:rgba(255,255,255,.72);
+      white-space:nowrap;
+      flex:0 0 auto;
+    }
+
+    .empty{
+      background:#fff;
+      border:1px dashed var(--stroke);
+      border-radius:var(--radius-item);
+      padding:18px 16px;
+      color:var(--muted);
+      font-size:24px;
+      line-height:1.2;
+      font-weight:700;
+      text-align:center;
+    }
+
+    footer{
+      display:grid;
+      grid-template-columns:1fr 1.4fr 1fr;
+      align-items:center;
+      gap:16px;
+      padding:0 6px;
+      font-size:22px;
+      font-weight:700;
+      min-height:0;
+    }
+
+    .footer-center{
+      text-align:center;
+      color:var(--muted);
+      font-size:18px;
+      line-height:1.2;
+      font-weight:700;
+    }
+
+    .footer-right{
+      text-align:right;
+      color:var(--muted);
+    }
+
+    .ok{ color:var(--ok); }
+    .warn{ color:var(--warn); }
+    .error{ color:var(--danger); }
+
+    .fade{
+      animation:fadeIn .35s ease;
+    }
+
+    @keyframes fadeIn{
+      from{ opacity:.5; }
+      to{ opacity:1; }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="app">
+    <header>
+      <div class="titlewrap">
+        <div class="icon">🚌</div>
+        <div class="titlebox">
+          <h1 id="residenceName">Senioriales Toulouse Canal du Midi</h1>
+          <div class="sub" id="subtitle">Prochains bus en temps réel</div>
+        </div>
+      </div>
+
+      <div class="meta">
+        <p class="clock" id="clock">--:--</p>
+        <div class="updated" id="updated">Mise à jour : —</div>
+      </div>
+    </header>
+
+    <main>
+      <div id="screen" class="screen"></div>
+    </main>
+
+    <footer>
+      <div id="status">Chargement…</div>
+      <div class="footer-center" id="dataNotice">Données temps réel : Tisséo OpenData — Licence ODbL</div>
+      <div class="footer-right" id="screenLabel">Écran 1 / 2</div>
+    </footer>
+  </div>
+
+  <script>
+    const currentData = {};
+    let currentScreenIndex = 0;
+    let lastApiError = "";
+
+    function pad2(n){
+      return String(n).padStart(2, "0");
+    }
+
+    function setClock(){
+      const d = new Date();
+      document.getElementById("clock").textContent = `${pad2(d.getHours())}:${pad2(d.getMinutes())}`;
+    }
+
+    function setUpdatedNow(){
+      const d = new Date();
+      document.getElementById("updated").textContent =
+        `Mise à jour : ${pad2(d.getHours())}:${pad2(d.getMinutes())}:${pad2(d.getSeconds())}`;
+    }
+
+    function parseApiDate(str){
+      if(!str) return null;
+      const d = new Date(String(str).replace(" ", "T"));
+      return isNaN(d.getTime()) ? null : d;
+    }
+
+    function fmtHHMM(str){
+      const d = parseApiDate(str);
+      if(!d) return "--:--";
+      return `${pad2(d.getHours())}:${pad2(d.getMinutes())}`;
+    }
+
+    function minsFromWaitingTime(waitingTime){
+      if(!waitingTime) return null;
+      const p = String(waitingTime).split(":").map(Number);
+      if(p.length !== 3 || p.some(Number.isNaN)) return null;
+      return Math.max(0, Math.round((p[0] * 3600 + p[1] * 60 + p[2]) / 60));
+    }
+
+    function minsToDate(str){
+      const d = parseApiDate(str);
+      if(!d) return null;
+      return Math.max(0, Math.round((d.getTime() - Date.now()) / 60000));
+    }
+
+    function normalizeDirectionName(destination){
+      if(Array.isArray(destination) && destination.length){
+        return destination[0]?.name || "Direction";
+      }
+      if(destination && typeof destination === "object"){
+        return destination.name || "Direction";
+      }
+      if(typeof destination === "string"){
+        return destination;
+      }
+      return "Direction";
+    }
+
+    async function fetchOperatorCode(operatorCode){
+      const url =
+        `${CONFIG.proxyBaseUrl}` +
+        `?operatorCode=${encodeURIComponent(operatorCode)}` +
+        `&network=${encodeURIComponent(CONFIG.network)}` +
+        `&displayRealTime=1` +
+        `&timetableByArea=${encodeURIComponent(CONFIG.timetableByArea)}` +
+        `&number=${encodeURIComponent(CONFIG.numberPerStop)}` +
+        `&maxDays=2` +
+        `&key=${encodeURIComponent(CONFIG.apiKey)}`;
+
+      try{
+        const res = await fetch(url, {
+          method: "GET",
+          cache: "no-store",
+          headers: { "Accept": "application/json" }
+        });
+
+        if(!res.ok){
+          const body = await res.text();
+          throw new Error(`HTTP ${res.status}${body ? " - " + body : ""}`);
+        }
+
+        const payload = await res.json();
+
+        const apiMessage =
+          payload?.status?.message ||
+          payload?.status?.error ||
+          payload?.message ||
+          payload?.error ||
+          "";
+
+        if(apiMessage){
+          throw new Error(`API arrêt ${operatorCode} : ${apiMessage}`);
+        }
+
+        return payload;
+      } catch(err){
+        throw new Error(`Arrêt ${operatorCode} : ${err.message}`);
+      }
+    }
+
+    function extractDepartures(payload){
+      const results = [];
+
+      if(Array.isArray(payload?.departures?.stopAreas)){
+        payload.departures.stopAreas.forEach(stopArea => {
+          (stopArea?.schedules || []).forEach(schedule => {
+            const lineCode = schedule?.line?.shortName || "";
+            const destinationName = normalizeDirectionName(schedule?.destination);
+
+            (schedule?.journeys || []).forEach(journey => {
+              const rawDateTime = journey?.dateTime || journey?.datetime || journey?.date || "";
+
+              results.push({
+                lineCode,
+                destinationName,
+                rawDateTime,
+                time: fmtHHMM(rawDateTime),
+                minutes:
+                  minsFromWaitingTime(journey?.waiting_time || journey?.waitingTime) ??
+                  minsToDate(rawDateTime) ??
+                  0,
+                realtime:
+                  journey?.realTime === "yes" ||
+                  journey?.realTime === "1" ||
+                  journey?.realTime === 1 ||
+                  journey?.realTime === true
+              });
+            });
+          });
+        });
+      }
+
+      if(Array.isArray(payload?.departure)){
+        payload.departure.forEach(item => {
+          const rawDateTime = item?.dateTime || item?.datetime || item?.date || "";
+          results.push({
+            lineCode: item?.line?.shortName || "",
+            destinationName: normalizeDirectionName(item?.destination),
+            rawDateTime,
+            time: fmtHHMM(rawDateTime),
+            minutes:
+              minsFromWaitingTime(item?.waiting_time || item?.waitingTime) ??
+              minsToDate(rawDateTime) ??
+              0,
+            realtime:
+              item?.realTime === "yes" ||
+              item?.realTime === "1" ||
+              item?.realTime === 1 ||
+              item?.realTime === true
+          });
+        });
+      }
+
+      if(Array.isArray(payload?.departures?.departure)){
+        payload.departures.departure.forEach(item => {
+          const rawDateTime = item?.dateTime || item?.datetime || item?.date || "";
+          results.push({
+            lineCode: item?.line?.shortName || "",
+            destinationName: normalizeDirectionName(item?.destination),
+            rawDateTime,
+            time: fmtHHMM(rawDateTime),
+            minutes:
+              minsFromWaitingTime(item?.waiting_time || item?.waitingTime) ??
+              minsToDate(rawDateTime) ??
+              0,
+            realtime:
+              item?.realTime === "yes" ||
+              item?.realTime === "1" ||
+              item?.realTime === 1 ||
+              item?.realTime === true
+          });
+        });
+      }
+
+      return results;
+    }
+
+    function dedupeTimes(items){
+      const seen = new Set();
+
+      return items.filter(item => {
+        const key = `${item.lineCode}-${item.destinationName}-${item.rawDateTime}`;
+        if(seen.has(key)) return false;
+        seen.add(key);
+        return true;
+      });
+    }
+
+    function buildLineData(lineConfig, allDepartures){
+      const filtered = allDepartures
+        .filter(x => String(x.lineCode).toUpperCase() === String(lineConfig.lineCode).toUpperCase())
+        .sort((a, b) => {
+          const ad = parseApiDate(a.rawDateTime)?.getTime() || 0;
+          const bd = parseApiDate(b.rawDateTime)?.getTime() || 0;
+          return ad - bd;
+        });
+
+      const byDirection = new Map();
+
+      filtered.forEach(item => {
+        const key = item.destinationName || "Direction";
+        if(!byDirection.has(key)) byDirection.set(key, []);
+        byDirection.get(key).push(item);
+      });
+
+      const directions = [...byDirection.entries()]
+        .map(([name, times]) => ({
+          name,
+          times: dedupeTimes(times).slice(0, 3).map(t => ({
+            time: t.time,
+            minutes: t.minutes,
+            realtime: t.realtime
+          }))
+        }))
+        .sort((a, b) => {
+          const am = a.times[0]?.minutes ?? 9999;
+          const bm = b.times[0]?.minutes ?? 9999;
+          return am - bm;
+        })
+        .slice(0, 2);
+
+      while(directions.length < 2){
+        directions.push({
+          name: "Aucun passage annoncé",
+          times: []
+        });
+      }
+
+      return {
+        serviceStatus: directions.some(d => d.times.length > 0) ? "ok" : "warn",
+        directions
+      };
+    }
+
+    async function loadTransportData(){
+      const allOperatorCodes = [...new Set(
+        CONFIG.screens.flatMap(screen => screen.lines.flatMap(line => line.operatorCodes))
+      )];
+
+      const results = await Promise.allSettled(
+        allOperatorCodes.map(async (operatorCode) => {
+          const payload = await fetchOperatorCode(operatorCode);
+          return {
+            operatorCode,
+            departures: extractDepartures(payload)
+          };
+        })
+      );
+
+      const okResults = results
+        .filter(result => result.status === "fulfilled")
+        .map(result => result.value);
+
+      const failedResults = results
+        .filter(result => result.status === "rejected")
+        .map(result => result.reason?.message || "Erreur inconnue");
+
+      const allDepartures = okResults.flatMap(item => item.departures);
+
+      if(okResults.length === 0){
+        throw new Error(failedResults[0] || "Aucune donnée récupérée");
+      }
+
+      CONFIG.screens.forEach(screen => {
+        screen.lines.forEach(line => {
+          currentData[line.lineCode] = buildLineData(line, allDepartures);
+        });
+      });
+
+      if(failedResults.length > 0){
+        lastApiError = `Données partielles : ${failedResults[0]}`;
+      } else {
+        lastApiError = "";
+      }
+    }
+
+    function formatMinutesLabel(minutes){
+      if(minutes <= 1) return "À l’approche";
+      return `dans ${minutes} min`;
+    }
+
+    function renderDeparture(item, index){
+      const isNext = index === 0;
+      return `
+        <div class="dep ${isNext ? "next" : ""}">
+          <div class="dep-left">
+            <div class="dep-time">${item.time}</div>
+          </div>
+          <div class="dep-right">
+            ${isNext ? `<div class="next-badge">PROCHAIN</div>` : ""}
+            <div class="dep-mins">${formatMinutesLabel(item.minutes)}</div>
+          </div>
+        </div>
+      `;
+    }
+
+    function renderDirection(direction, maxTimes){
+      const times = (direction.times || []).slice(0, maxTimes);
+
+      return `
+        <section class="dir-panel">
+          <h3 class="dir-title">Direction ${direction.name}</h3>
+          <div class="dep-list">
+            ${
+              times.length
+                ? times.map((item, index) => renderDeparture(item, index)).join("")
+                : `<div class="empty">Aucun passage proche</div>`
+            }
+          </div>
+        </section>
+      `;
+    }
+
+    function renderLineCard(lineConfig, lineData, isSingle){
+      const maxTimes = isSingle ? CONFIG.maxTimesOneLine : CONFIG.maxTimesTwoLines;
+
+      return `
+        <article class="line-card" style="--line-color:${lineConfig.color}">
+          <div class="line-card-header">
+            <div class="line-top">
+              <div class="line-badge">${lineConfig.lineCode}</div>
+              <div class="line-meta">
+                <p class="line-title">Ligne ${lineConfig.lineCode}</p>
+                <p class="line-stop">${lineConfig.stopName}</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="line-body">
+            ${lineData.directions.map(d => renderDirection(d, maxTimes)).join("")}
+          </div>
+        </article>
+      `;
+    }
+
+    function renderScreen(){
+      const screenConfig = CONFIG.screens[currentScreenIndex];
+      const isSingle = screenConfig.lines.length === 1;
+      const screenEl = document.getElementById("screen");
+
+      screenEl.className = `screen ${isSingle ? "one-line" : "two-lines"} fade`;
+
+      screenEl.innerHTML = screenConfig.lines.map(lineConfig => {
+        const lineData = currentData[lineConfig.lineCode] || {
+          directions: [
+            { name: "Chargement…", times: [] },
+            { name: "Chargement…", times: [] }
+          ]
+        };
+
+        return renderLineCard(lineConfig, lineData, isSingle);
+      }).join("");
+
+      document.getElementById("screenLabel").textContent = screenConfig.label;
+      updateStatus();
+    }
+
+    function updateStatus(){
+      const statusEl = document.getElementById("status");
+      const statuses = Object.values(currentData).map(x => x.serviceStatus);
+
+      if(statuses.length === 0){
+        statusEl.innerHTML = `<span class="warn">● Chargement…</span>`;
+        return;
+      }
+
+      if(statuses.includes("error")){
+        statusEl.innerHTML = `<span class="error">● ${lastApiError || "Données temporairement indisponibles"}</span>`;
+        return;
+      }
+
+      if(lastApiError){
+        statusEl.innerHTML = `<span class="warn">● ${lastApiError}</span>`;
+        return;
+      }
+
+      if(statuses.includes("warn")){
+        statusEl.innerHTML = `<span class="warn">● Données partielles</span>`;
+        return;
+      }
+
+      statusEl.innerHTML = `<span class="ok">● Service OK</span>`;
+    }
+
+    function rotateScreen(){
+      currentScreenIndex = (currentScreenIndex + 1) % CONFIG.screens.length;
+      renderScreen();
+    }
+
+    async function refreshData(){
+      try{
+        await loadTransportData();
+        setUpdatedNow();
+        renderScreen();
+      } catch(error){
+        console.error(error);
+        lastApiError = error?.message || "Données temporairement indisponibles";
+
+        CONFIG.screens.forEach(screen => {
+          screen.lines.forEach(line => {
+            currentData[line.lineCode] = {
+              serviceStatus: "error",
+              directions: [
+                { name: "Données indisponibles", times: [] },
+                { name: "Données indisponibles", times: [] }
+              ]
+            };
+          });
+        });
+
+        setUpdatedNow();
+        renderScreen();
+      }
+    }
+
+    function boot(){
+      document.getElementById("residenceName").textContent = CONFIG.residenceName;
+      document.getElementById("subtitle").textContent = CONFIG.subtitle;
+
+      const noticeEl = document.getElementById("dataNotice");
+      if(noticeEl && CONFIG.dataNotice){
+        noticeEl.textContent = CONFIG.dataNotice;
+      }
+
+      setClock();
+      renderScreen();
+      refreshData();
+
+      setInterval(setClock, 1000);
+      setInterval(refreshData, CONFIG.refreshMs);
+      setInterval(rotateScreen, CONFIG.rotationMs);
+    }
+
+    boot();
+  </script>
+</body>
+</html>
