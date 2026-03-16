@@ -1,7 +1,7 @@
 const CONFIG = {
   apiKey: "fb249f12-5388-4aa5-86cf-7ef52196587d",
 
-  proxyBaseUrl: "/api/tisseo",
+  proxyBaseUrl: "/.netlify/functions/tisseo",
   network: "Tisséo",
   numberPerStop: 6,
   timetableByArea: 1,
