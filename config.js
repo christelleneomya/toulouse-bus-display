@@ -1,7 +1,11 @@
 const CONFIG = {
   apiKey: "fb249f12-5388-4aa5-86cf-7ef52196587d",
 
-  proxyBaseUrl: "/.netlify/functions/tisseo",
+  proxyBaseUrl:
+    location.hostname === "127.0.0.1" || location.hostname === "localhost"
+      ? "http://127.0.0.1:9000/api/tisseo"
+      : "/.netlify/functions/tisseo",
+
   network: "Tisséo",
   numberPerStop: 6,
   timetableByArea: 1,
@@ -19,7 +23,7 @@ const CONFIG = {
   screens: [
     {
       id: "screen-a",
-      label: "Écran 1 / 2",
+      label: "Écran 1 / 3",
       lines: [
         {
           lineCode: "15",
@@ -37,13 +41,25 @@ const CONFIG = {
     },
     {
       id: "screen-b",
-      label: "Écran 2 / 2",
+      label: "Écran 2 / 3",
       lines: [
         {
           lineCode: "L1",
           stopName: "Ponts Jumeaux",
           operatorCodes: ["5630", "5631"],
           color: "#f08a24"
+        }
+      ]
+    },
+    {
+      id: "screen-c",
+      label: "Écran 3 / 3",
+      lines: [
+        {
+          lineCode: "70",
+          stopName: "ZAC Ponts Jumeaux",
+          operatorCodes: ["27410", "27411"],
+          color: "#8b5cf6"
         }
       ]
     }
